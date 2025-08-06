@@ -1,0 +1,63 @@
+---
+- name: Kubernetes Cleanup and Setup
+  hosts: all
+  tasks:
+    - name: Delete application namespace
+      command: kubectl delete ns application
+      ignore_errors: true
+
+    - name: Delete opentelemetry namespace
+      command: kubectl delete ns opentelemetry
+      ignore_errors: true
+
+    - name: Delete monitoring namespace
+      command: kubectl delete ns monitoring
+      ignore_errors: true
+
+    - name: Delete all PersistentVolumes
+      command: kubectl delete pv --all
+      ignore_errors: true
+
+    - name: Delete all PersistentVolumeClaims
+      command: kubectl delete pvc --all
+      ignore_errors: true
+
+    - name: Wait for cleanup to complete
+      wait_for:
+        timeout: 5
+
+    - name: Start creating resources
+      debug:
+        msg: "-------------------------------------------------------------------------\nStart creating\n-------------------------------------------------------------------------"
+
+    - name: Apply storage configuration
+      command: kubectl apply -f ../exercise10/storage.yaml
+
+    - name: Apply deployment configuration
+      command: kubectl apply -f ../exercise10/deployment.yaml
+
+    - name: Apply Otel Collector configuration
+      command: kubectl apply -f ../exercise10/otel-collector.yaml
+
+    - name: Apply Jaeger configuration
+      command: kubectl apply -f ../exercise8/jaeger.yaml
+
+    - name: Apply Prometheus configuration
+      command: kubectl apply -f ../exercise9/prometheus.yaml
+
+    - name: Apply Grafana Loki configuration
+      command: kubectl apply -f ../exercise10/grafana-loki.yaml
+
+    - name: Apply Grafana configuration
+      command: kubectl apply -f ./grafana.yaml
+
+    - name: Log wait message
+      debug:
+        msg: "-------------------------------------------------------------------------\nwait\n-------------------------------------------------------------------------"
+
+    - name: Wait for resources to initialize
+      wait_for:
+        timeout: 5
+
+    - name: Get pods across all namespaces
+      command: kubectl get pods -A

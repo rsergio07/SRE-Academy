@@ -1,0 +1,45 @@
+---
+- name: Automate Kubernetes Cleanup and Deployment
+  hosts: all
+  gather_facts: no
+
+  tasks:
+    - name: Delete 'application' namespace
+      command:
+        cmd: kubectl delete ns application
+      ignore_errors: yes
+
+    - name: Delete 'opentelemetry' namespace
+      command:
+        cmd: kubectl delete ns opentelemetry
+      ignore_errors: yes
+
+    - name: Delete 'monitoring' namespace
+      command:
+        cmd: kubectl delete ns monitoring
+      ignore_errors: yes
+
+    - name: Wait for 5 seconds
+      wait_for:
+        timeout: 5
+
+    - name: Apply deployment.yaml
+      command:
+        cmd: kubectl apply -f ../exercise8/deployment.yaml
+
+    - name: Apply otel-collector.yaml
+      command:
+        cmd: kubectl apply -f ./otel-collector.yaml
+
+    - name: Apply jaeger.yaml
+      command:
+        cmd: kubectl apply -f ../exercise8/jaeger.yaml
+
+    - name: Apply prometheus.yaml
+      command:
+        cmd: kubectl apply -f ./prometheus.yaml
+
+    - name: Apply grafana.yaml
+      command:
+        cmd: kubectl apply -f ./grafana.yaml
+

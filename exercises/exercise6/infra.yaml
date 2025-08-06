@@ -1,0 +1,9 @@
+---
+- name: Apply Grafana configuration and start service in Minikube
+  hosts: all
+  #become: yes  # Optional, if sudo permissions are required
+  tasks:
+    - name: Apply Grafana configuration
+      command: kubectl apply -f grafana.yaml
+      args:
+        chdir: ./  # Adjust path as needed

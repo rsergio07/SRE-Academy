@@ -1,0 +1,157 @@
+---
+- name: AWX Operator Installation Playbook
+  hosts: all
+  tasks:
+
+    - name: Delete AWX namespace
+      ansible.builtin.shell: kubectl delete ns awx --ignore-not-found=true
+
+    - name: Delete application namespace
+      ansible.builtin.shell: kubectl delete ns application --ignore-not-found=true
+
+    - name: Delete OpenTelemetry namespace
+      ansible.builtin.shell: kubectl delete ns opentelemetry --ignore-not-found=true
+
+    - name: Delete monitoring namespace
+      ansible.builtin.shell: kubectl delete ns monitoring --ignore-not-found=true
+
+    - name: Delete all Persistent Volumes
+      ansible.builtin.shell: kubectl delete pv --all --ignore-not-found=true
+
+    - name: Delete all Persistent Volume Claims
+      ansible.builtin.shell: kubectl delete pvc --all --ignore-not-found=true
+
+    - name: Wait for resources to be deleted
+      ansible.builtin.wait_for:
+        timeout: 5
+
+    - name: Install Helm
+      ansible.builtin.command:
+        cmd: brew install helm
+      register: helm_install
+      ignore_errors: true
+      when: ansible_os_family == "Darwin"
+
+    - name: Add AWX Operator Helm repository
+      ansible.builtin.shell: helm repo add awx-operator https://ansible-community.github.io/awx-operator-helm/
+
+    - name: Install AWX Operator using Helm
+      ansible.builtin.shell: helm install my-awx-operator awx-operator/awx-operator -n awx --create-namespace
+
+    - name: Get list of pods in awx namespace
+      command: kubectl get pods -n awx
+      register: kubectl_output
+      until: "'awx-operator-controller-manager' in kubectl_output.stdout"
+      retries: 30
+      delay: 20  # Wait 20 seconds between retries
+      failed_when: false
+      changed_when: false
+
+    - name: Print the kubectl output
+      debug:
+        msg: "{{ kubectl_output.stdout }}"
+
+    - name: Apply AWX demo configuration
+      ansible.builtin.command:
+        cmd: kubectl apply -f awx-demo.yml
+
+    - name: Check if awx-demo-service is available
+      command: kubectl get service awx-demo-service -n awx
+      register: kubectl_output
+      until: "'awx-demo-service' in kubectl_output.stdout"
+      retries: 10  # Set the number of retries (e.g., 10 retries)
+      delay: 20  # Wait 20 seconds between retries
+      failed_when: false  # Don't fail the task prematurely
+      changed_when: false  # Don't mark the task as changed
+        
+    - name: Wait until AWX migration is completed
+      command: kubectl get pods -A | grep awx-demo-migration
+      register: kubectl_output
+      #until: kubectl_output.stdout is search("Completed")
+      until: "'Completed' in kubectl_output.stdout"
+      retries: 10  # Set the number of retries (e.g., 30 retries)
+      delay: 20  # Wait 10 seconds between retries
+      failed_when: false  # Don't fail the task prematurely
+      changed_when: false  # Don't mark the task as changed
+
+    - name: Print raw output
+      debug:
+        var: kubectl_output.stdout
+
+    - name: Fetch AWX demo service URL
+      command: minikube service awx-demo-service -n awx --url
+      register: service_url_output
+
+    - name: Load AWX URL into variable
+      set_fact:
+        awx_url: "{{ service_url_output.stdout }}"
+
+    - name: Execute kubectl command to get password
+      command: kubectl get secret awx-demo-admin-password -o jsonpath="{.data.password}" -n awx
+      register: kubectl_output
+      changed_when: false
+
+    - name: Set awx_password variable
+      set_fact:
+        awx_password: "{{ kubectl_output.stdout | b64decode  }}"
+    
+    - name: Print the AWX password
+      debug:
+        msg: "The AWX service URL is {{ awx_url }}. The admin password is: {{ awx_password }}"
+
+# Import the AWX configuration playbook
+- import_playbook: awx-configuration.yaml
+
+- name: Manage Kubernetes resources
+  hosts: all
+  tasks:
+    
+    - name: Print start message
+      ansible.builtin.debug:
+        msg: |
+          -------------------------------------------------------------------------
+          Start creating
+          -------------------------------------------------------------------------
+
+    - name: Apply storage configuration
+      command: kubectl apply -f ../exercise10/storage.yaml
+
+    - name: Apply deployment configuration
+      command: kubectl apply -f ../exercise10/deployment.yaml
+
+    - name: Apply OpenTelemetry collector configuration
+      command: kubectl apply -f ../exercise10/otel-collector.yaml
+
+    - name: Apply Jaeger configuration
+      command: kubectl apply -f ../exercise8/jaeger.yaml
+
+    - name: Apply Prometheus configuration
+      command: kubectl apply -f ../exercise9/prometheus.yaml
+
+    - name: Apply Grafana Loki configuration
+      command: kubectl apply -f ../exercise12/grafana-loki.yaml
+
+    - name: Apply Grafana configuration
+      command: kubectl apply -f ./grafana_updated.yaml
+
+    - name: Print waiting message
+      ansible.builtin.debug:
+        msg: |
+          -------------------------------------------------------------------------
+          wait
+          -------------------------------------------------------------------------
+
+    - name: Pause before checking pods
+      ansible.builtin.wait_for:
+        timeout: 5
+
+    - name: Get all pods in all namespaces
+      command: kubectl get pods -A
+      register: pod_status
+
+    - name: Display pod status
+      ansible.builtin.debug:
+        var: pod_status.stdout
+
+
+      

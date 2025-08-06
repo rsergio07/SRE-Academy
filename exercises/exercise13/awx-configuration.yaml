@@ -1,0 +1,385 @@
+---
+- name: Create Organization, Inventory, Project, and Job Template in AWX
+  hosts: all
+  gather_facts: false
+  vars:
+    awx_username: "admin"
+    organization_name: "SRE's Organization"
+    organization_description: "Organization created via Ansible."
+    inventory_name: "SRE's Inventory"
+    inventory_description: "Inventory created via Ansible."
+    project_name: "SRE's Project"
+    project_description: "Project created via Ansible."
+    project_scm_url: "https://github.com/cguillencr/sre-abc-training.git"
+    job_template_name: "SRE's Job Template"
+    job_template_description: "Job template created via Ansible."
+    playbook: "exercises/exercise13/collect-status-application.yaml"
+    application_name: "SRE's App"
+    application_description: "Application for SRE use cases."
+  tasks:
+    - name: Fetch AWX demo service URL
+      command: minikube service awx-demo-service -n awx --url
+      register: service_url_output
+
+    - name: Load AWX URL into variable
+      set_fact:
+        awx_url: "{{ service_url_output.stdout }}"
+
+    - name: Display AWX URL
+      debug:
+        msg: "The AWX service URL is {{ awx_url }}"
+
+    - name: Execute kubectl command to get password
+      command: kubectl get secret awx-demo-admin-password -o jsonpath="{.data.password}" -n awx
+      register: kubectl_output
+      changed_when: false
+
+    - name: Set awx_password variable
+      set_fact:
+        awx_password: "{{ kubectl_output.stdout | b64decode  }}"
+    
+    - name: Print the AWX password
+      debug:
+        msg: "The AWX password is: {{ awx_password }}"
+
+    - name: Check if organization exists
+      uri:
+        url: "{{ awx_url }}/api/v2/organizations/?name={{ organization_name| urlencode  }}"
+        method: GET
+        user: "{{ awx_username }}"
+        password: "{{ awx_password }}"
+        force_basic_auth: yes
+        headers:
+          Content-Type: "application/json"
+        status_code: 200
+      register: check_org_response
+      ignore_errors: yes  # Ignore errors if organization is not found
+
+    - name: Organization already exists ?
+      set_fact:
+        organization_already_exists: "{{ check_org_response.status == 200 and check_org_response.json.results | length > 0 }}"
+
+    - name: Set organization_id if organization exists
+      when: organization_already_exists
+      set_fact:
+        organization_id: "{{ check_org_response.json.results[0].id }}"
+
+    - name: Create organization
+      when: not organization_already_exists
+      uri:
+        url: "{{ awx_url }}/api/v2/organizations/"
+        method: POST
+        user: "{{ awx_username }}"
+        password: "{{ awx_password }}"
+        force_basic_auth: yes
+        headers:
+          Content-Type: "application/json"
+        body_format: json
+        body:
+          name: "{{ organization_name }}"
+          description: "{{ organization_description }}"
+        status_code: 201
+      register: organization_response
+
+    - name: Set organization ID
+      when: not organization_already_exists
+      set_fact:
+        organization_id: "{{ organization_response.json.id }}"
+
+    - name: Check if inventory exists
+      uri:
+        url: "{{ awx_url }}/api/v2/inventories/?name={{ inventory_name | urlencode }}&organization={{ organization_id }}"
+        method: GET
+        user: "{{ awx_username }}"
+        password: "{{ awx_password }}"
+        force_basic_auth: yes
+        headers:
+          Content-Type: "application/json"
+        status_code: 200
+      register: check_inventory_response
+      ignore_errors: yes  # Ignore errors if inventory is not found
+
+    - name: Inventory already exists ?
+      set_fact:
+        inventory_already_exists: "{{ check_inventory_response.status == 200 and check_inventory_response.json.results | length > 0 }}"
+
+    - name: Set inventory_id if inventory exists
+      when: inventory_already_exists
+      set_fact:
+        inventory_id: "{{ check_inventory_response.json.results[0].id }}"
+
+    - name: Create inventory
+      when: not inventory_already_exists
+      uri:
+        url: "{{ awx_url }}/api/v2/inventories/"
+        method: POST
+        user: "{{ awx_username }}"
+        password: "{{ awx_password }}"
+        force_basic_auth: yes
+        headers:
+          Content-Type: "application/json"
+        body_format: json
+        body:
+          name: "{{ inventory_name }}"
+          description: "{{ inventory_description }}"
+          organization: "{{ organization_id }}"
+        status_code: 201
+      register: inventory_response
+
+    - name: Set inventory ID
+      when: not inventory_already_exists  
+      set_fact:
+        inventory_id: "{{ inventory_response.json.id }}"
+
+    - name: Check if project exists
+      uri:
+        url: "{{ awx_url }}/api/v2/projects/?name={{ project_name | urlencode }}&organization={{ organization_id }}"
+        method: GET
+        user: "{{ awx_username }}"
+        password: "{{ awx_password }}"
+        force_basic_auth: yes
+        headers:
+          Content-Type: "application/json"
+        status_code: 200
+      register: check_project_response
+      ignore_errors: yes  # Ignore errors if project is not found
+
+    - name: project already exists ?
+      set_fact:
+        project_already_exists: "{{ check_project_response.status == 200 and check_project_response.json.results | length > 0 }}"
+
+    - name: Set project_id if project exists
+      when: project_already_exists
+      set_fact:
+        project_id: "{{ check_project_response.json.results[0].id }}"
+
+    - name: Create project if it does not exist
+      when: not project_already_exists
+      uri:
+        url: "{{ awx_url }}/api/v2/projects/"
+        method: POST
+        user: "{{ awx_username }}"
+        password: "{{ awx_password }}"
+        force_basic_auth: yes
+        headers:
+          Content-Type: "application/json"
+        body_format: json
+        body:
+          name: "{{ project_name }}"
+          description: "{{ project_description }}"
+          organization: "{{ organization_id }}"
+          scm_type: "git"
+          scm_url: "{{ project_scm_url }}"
+        status_code: 201
+      register: project_response
+
+    - name: Set project_id after project creation
+      when:  not project_already_exists
+      set_fact:
+        project_id: "{{ project_response.json.id }}"
+
+    - name: Check if job template exists
+      uri:
+        url: "{{ awx_url }}/api/v2/job_templates/?name={{ job_template_name | urlencode }}"
+        method: GET
+        user: "{{ awx_username }}"
+        password: "{{ awx_password }}"
+        force_basic_auth: yes
+        headers:
+          Content-Type: "application/json"
+        status_code: 200
+      register: check_job_template_response
+      ignore_errors: yes  # Ignore errors if job template is not found
+
+    - name: template already exists ?
+      set_fact:
+        template_already_exists: "{{ check_job_template_response.status == 200 and check_job_template_response.json.results | length > 0 }}"
+
+    - name: Set job_template_response if job template exists
+      when: template_already_exists
+      set_fact:
+        job_template_id: "{{ check_job_template_response.json.results[0].id }}"
+
+    - name: Wait for 5 seconds, to fix race condition
+      when: not template_already_exists
+      pause:
+        seconds: 5
+
+    - name: Create job template
+      when: not template_already_exists
+      uri:
+        url: "{{ awx_url }}/api/v2/job_templates/"
+        method: POST
+        user: "{{ awx_username }}"
+        password: "{{ awx_password }}"
+        force_basic_auth: yes
+        headers:
+          Content-Type: "application/json"
+        body_format: json
+        body:
+          name: "{{ job_template_name }}"
+          description: "{{ job_template_description }}"
+          inventory: "{{ inventory_id }}"
+          project: "{{ project_id }}"
+          playbook: "{{ playbook }}"
+        status_code: 201
+      register: job_template_response
+
+    - name: Set job_template_response if job template not exists
+      when: not template_already_exists
+      set_fact:
+        job_template_id: "{{ job_template_response.json.id }}"
+
+
+    - name: Check if application exists
+      uri:
+        url: "{{ awx_url }}/api/v2/applications/?name={{ application_name | urlencode }}"
+        method: GET
+        user: "{{ awx_username }}"
+        password: "{{ awx_password }}"
+        force_basic_auth: yes
+        headers:
+          Content-Type: "application/json"
+        status_code: 200
+      register: application_check_response
+
+    - name: application already exists ?
+      set_fact:
+        application_already_exists: "{{  application_check_response.status == 200 and application_check_response.json.results | length > 0 }}"
+
+    - name: Set application_response if application exists
+      when: application_already_exists
+      set_fact:
+        client_id: "{{ application_check_response.json.results[0].client_id  }}"
+
+    - name: Create application
+      when: not application_already_exists
+      uri:
+        url: "{{ awx_url }}/api/v2/applications/"
+        method: POST
+        user: "{{ awx_username }}"
+        password: "{{ awx_password }}"
+        force_basic_auth: yes
+        headers:
+          Content-Type: "application/json"
+        body_format: json
+        body:
+          name: "{{ application_name }}"
+          description: "{{ application_description }}"
+          organization: "{{ organization_id }}"
+          client_type: "public"
+          authorization_grant_type: "password" 
+          skip_authorization: "True"
+        status_code: 201
+      register: application_response
+
+    - name: Set client ID
+      when: not application_already_exists
+      set_fact:
+        client_id: "{{ application_response.json.client_id }}"
+
+    - name: Display client ID
+      debug:
+        msg: "The client ID of the application is: {{ client_id }}"
+
+    #- name: Check if token exists
+    #  uri:
+    #    url: "{{ awx_url }}/api/v2/users/1/personal_tokens/"
+    #    method: GET
+    #    user: "{{ awx_username }}"
+    #    password: "{{ awx_password }}"
+    #    force_basic_auth: yes
+    #    headers:
+    #      Content-Type: "application/json"
+    #    status_code: 200
+    #  register: token_check_response
+
+    #- name: Token already exists?
+    #  set_fact:
+    #    token_already_exists: "{{ token_check_response.status == 200 and token_check_response.json.results | length > 0 }}"
+
+    #- name: Display token
+    #  debug:
+    #    msg: "The token is: {{ token_check_response }}"
+
+    #- name: Set Token if already exists
+    #  when: token_already_exists
+    #  no_log: false  # Disable the no_log setting to allow the token to be printed
+    #  set_fact:
+    #    token: "{{ token_check_response.json.results[0].token }}"
+
+    - name: Create token
+      #when: not token_already_exists
+      uri:
+        url: "{{ awx_url }}/api/v2/users/1/personal_tokens/"
+        method: POST
+        user: "{{ awx_username }}"
+        password: "{{ awx_password }}"
+        force_basic_auth: yes
+        headers:
+          Content-Type: "application/json"
+        body_format: json
+        body:
+          description: "Token for application {{ application_name }}"
+          application: "{{ application_name }}"
+        status_code: 201
+      register: token_response
+
+    - name: Set Token just created
+      #when: not token_already_exists
+      no_log: false  # Disable the no_log setting to allow the token to be printed
+      set_fact:
+        token: "{{ token_response.json.token }}"
+
+    - name:  Display token response
+      no_log: false  # Disable the no_log setting to allow the token to be printed
+      debug:
+        msg: "Token created: {{ token}}"
+
+
+    - name: Read the grafana.yaml file
+      ansible.builtin.slurp:
+        src: ./grafana.yaml
+      register: grafana_file
+
+    - name: Decode and split the content into multiple YAML documents
+      set_fact:
+        grafana_configmaps: "{{ grafana_file.content | b64decode | split('---') }}"
+
+    - name: Append the new block to the end of the grafana.yaml
+      set_fact:
+        new_block: |
+          contact_point.json: |
+              {
+                  "apiVersion": 1,
+                  "contactPoints": [
+                      {
+                          "name": "Job to collect information",
+                          "receivers": [
+                              {
+                                  "uid": "ee51tv6lev8qpb",
+                                  "type": "webhook",
+                                  "settings": {
+                                      authorization_credentials: "{{ token }}",
+                                      "authorization_scheme": "Bearer",
+                                      "httpMethod": "POST",
+                                      url: "{{ awx_url }}/api/v2/job_templates/{{ job_template_id }}/launch/"
+                                  },
+                                  "disableResolveMessage": false
+                              }
+                          ]
+                      }
+                  ]
+              }
+
+    - name: Prepare new YAML with the appended block
+      set_fact:
+        #new_grafana_yaml: "{{ grafana_file.content | b64decode }}\n---\n{{ new_block }}"
+        new_grafana_yaml: "{{ grafana_file.content | b64decode }}\n  {{ new_block }}"
+
+    - name: Write the modified content to a new grafana.yaml file
+      copy:
+        content: "{{ new_grafana_yaml }}"
+        dest: ./grafana_updated.yaml
+
+

@@ -1,0 +1,96 @@
+---
+- name: Automate Podman, Minikube, and Kubernetes Setup
+  hosts: all
+  gather_facts: no
+
+  tasks:
+    - name: Log in to Podman
+      command: podman login docker.io
+      register: podman_login
+      ignore_errors: yes
+    - debug:
+        msg: "Podman login result: {{ podman_login.stdout }}"
+
+    - name: Build Docker image (latest tag)
+      command: podman build -t cguillenmendez/sre-abc-training-python-app:latest .
+      args:
+        chdir: "{{ playbook_dir }}"
+      ignore_errors: yes
+
+    - name: Build Docker image (specific tag)
+      command: podman build -t cguillenmendez/sre-abc-training-python-app:0.0.23 .
+      args:
+        chdir: "{{ playbook_dir }}"
+      ignore_errors: yes
+
+    - name: Push Docker image (latest tag)
+      command: podman push cguillenmendez/sre-abc-training-python-app:latest
+
+    - name: Push Docker image (specific tag)
+      command: podman push cguillenmendez/sre-abc-training-python-app:0.0.23
+
+    - name: Delete 'application' namespace
+      command: kubectl delete ns application
+      ignore_errors: yes
+
+    - name: Delete 'opentelemetry' namespace
+      command: kubectl delete ns opentelemetry
+      ignore_errors: yes
+
+    - name: Delete 'monitoring' namespace
+      command: kubectl delete ns monitoring
+      ignore_errors: yes
+
+    - name: Delete all PersistentVolumes
+      command: kubectl delete pv --all
+      ignore_errors: yes
+
+    - name: Delete all PersistentVolumeClaims
+      command: kubectl delete pvc --all
+      ignore_errors: yes
+
+    - name: Wait for cleanup to complete
+      wait_for:
+        timeout: 5
+
+    - name: Ensure log directory exists in Minikube
+      shell: |
+        sudo mkdir -p /data/sre-app/logs
+      args:
+        executable: /bin/bash
+      become: true
+
+    - name: Change permissions for log directory
+      shell: |
+        sudo chmod 777 /data/sre-app/logs
+      args:
+        executable: /bin/bash
+      become: true
+
+    - name: Apply Kubernetes storage configuration
+      command: kubectl apply -f ./storage.yaml
+
+    - name: Apply Kubernetes deployment configuration
+      command: kubectl apply -f ./deployment.yaml
+
+    - name: Apply OpenTelemetry Collector configuration
+      command: kubectl apply -f ./otel-collector.yaml
+
+    - name: Apply Jaeger configuration
+      command: kubectl apply -f ../exercise8/jaeger.yaml
+
+    - name: Apply Prometheus configuration
+      command: kubectl apply -f ../exercise9/prometheus.yaml
+
+    - name: Apply Grafana Loki configuration
+      command: kubectl apply -f ./grafana-loki.yaml
+
+    - name: Apply Grafana configuration
+      command: kubectl apply -f ./grafana.yaml
+
+    - name: Wait for 10 seconds
+      wait_for:
+        timeout: 10
+
+    - name: Get all pods across all namespaces
+      command: kubectl get pods -A

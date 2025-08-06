@@ -1,0 +1,74 @@
+---
+- name: Manage Kubernetes resources
+  hosts: all
+  tasks:
+    - name: Delete application namespace
+      command: kubectl delete ns application
+      ignore_errors: yes
+
+    - name: Delete opentelemetry namespace
+      command: kubectl delete ns opentelemetry
+      ignore_errors: yes
+
+    - name: Delete monitoring namespace
+      command: kubectl delete ns monitoring
+      ignore_errors: yes
+
+    - name: Delete all Persistent Volumes
+      command: kubectl delete pv --all
+      ignore_errors: yes
+
+    - name: Delete all Persistent Volume Claims
+      command: kubectl delete pvc --all
+      ignore_errors: yes
+
+    - name: Pause for cleanup
+      ansible.builtin.wait_for:
+        timeout: 5
+
+    - name: Print start message
+      ansible.builtin.debug:
+        msg: |
+          -------------------------------------------------------------------------
+          Start creating
+          -------------------------------------------------------------------------
+
+    - name: Apply storage configuration
+      command: kubectl apply -f ../exercise10/storage.yaml
+
+    - name: Apply deployment configuration
+      command: kubectl apply -f ../exercise10/deployment.yaml
+
+    - name: Apply OpenTelemetry collector configuration
+      command: kubectl apply -f ../exercise10/otel-collector.yaml
+
+    - name: Apply Jaeger configuration
+      command: kubectl apply -f ../exercise8/jaeger.yaml
+
+    - name: Apply Prometheus configuration
+      command: kubectl apply -f ../exercise9/prometheus.yaml
+
+    - name: Apply Grafana Loki configuration
+      command: kubectl apply -f ./grafana-loki.yaml
+
+    - name: Apply Grafana configuration
+      command: kubectl apply -f ./grafana.yaml
+
+    - name: Print waiting message
+      ansible.builtin.debug:
+        msg: |
+          -------------------------------------------------------------------------
+          wait
+          -------------------------------------------------------------------------
+
+    - name: Pause before checking pods
+      ansible.builtin.wait_for:
+        timeout: 5
+
+    - name: Get all pods in all namespaces
+      command: kubectl get pods -A
+      register: pod_status
+
+    - name: Display pod status
+      ansible.builtin.debug:
+        var: pod_status.stdout

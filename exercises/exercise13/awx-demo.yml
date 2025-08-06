@@ -1,0 +1,22 @@
+---
+apiVersion: awx.ansible.com/v1beta1
+kind: AWX
+metadata:
+  name: awx-demo
+  namespace: awx
+spec:
+  service_type: nodeport
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: awx-api-service
+  namespace: awx
+spec:
+  selector:
+    app: awx-demo
+  ports:
+    - protocol: TCP
+      port: 80  # Internal port for Grafana to communicate
+      targetPort: 8052  # AWX API default port
+

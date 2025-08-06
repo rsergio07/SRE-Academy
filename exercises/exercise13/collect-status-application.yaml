@@ -1,0 +1,15 @@
+- name: Delete all pods with prefix sre-abc-training-app
+  hosts: all
+  tasks:
+    - name: Print the hostname of the environment
+      debug:
+        msg: "The hostname of this environment is {{ ansible_hostname }}."
+
+    - name: Print the operating system
+      debug:
+        msg: "The operating system is {{ ansible_distribution }} {{ ansible_distribution_version }}."
+
+    - name: Print the user running the playbook
+      debug:
+        msg: "This playbook is being run by the user {{ lookup('env', 'USER') }}."
+

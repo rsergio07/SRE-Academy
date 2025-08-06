@@ -1,0 +1,11 @@
+---
+- name: Manage Grafana YAML files in Kubernetes
+  hosts: all
+  become: yes 
+  tasks:
+    - name: Delete existing Grafana deployment
+      command: kubectl delete -f ../exercise6/grafana.yaml
+      ignore_errors: yes
+
+    - name: Apply the new Grafana configuration
+      command: kubectl apply -f ./grafana.yaml

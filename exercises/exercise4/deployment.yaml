@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sre-abc-training-app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: sre-abc-training-app
+  template:
+    metadata:
+      labels:
+        app: sre-abc-training-app
+    spec:
+      containers:
+      - name: sre-abc-training-app
+        image: cguillenmendez/sre-abc-training-python-app:latest
+        ports:
+        - containerPort: 5000

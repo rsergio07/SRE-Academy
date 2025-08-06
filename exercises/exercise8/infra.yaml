@@ -1,0 +1,41 @@
+---
+- name: Manage Kubernetes Resources
+  hosts: all
+  become: yes
+  tasks:
+    - name: Delete existing deployment from exercise4
+      command: kubectl delete -f ../exercise4/deployment.yaml
+      ignore_errors: yes  # Ignore errors if file doesn't exist
+
+    - name: Delete existing service from exercise4
+      command: kubectl delete -f ../exercise4/service.yaml
+      ignore_errors: yes
+
+    - name: Delete current deployment
+      command: kubectl delete -f deployment.yaml
+      ignore_errors: yes
+
+    - name: Delete OpenTelemetry Collector configuration
+      command: kubectl delete -f otel-collector.yaml
+      ignore_errors: yes
+
+    - name: Delete Grafana configuration from exercise7
+      command: kubectl delete -f ../exercise7/grafana.yaml
+      ignore_errors: yes
+
+    - name: Pause for resource cleanup
+      wait_for:
+        timeout: 5
+
+    - name: Apply new deployment configuration
+      command: kubectl apply -f deployment.yaml
+
+    - name: Apply OpenTelemetry Collector configuration
+      command: kubectl apply -f otel-collector.yaml
+
+    - name: Apply Jaeger configuration
+      command: kubectl apply -f jaeger.yaml
+
+    - name: Apply Grafana configuration from exercise7
+      command: kubectl apply -f ../exercise7/grafana.yaml
+
