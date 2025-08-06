@@ -1,43 +1,53 @@
 # Contributing to the SRE Academy Training Repository
 
-Thank you for your interest in contributing to this training repository! We welcome suggestions, improvements, and new ideas that can help strengthen the learning experience for aspiring Site Reliability Engineers.
+Thank you for your interest in contributing! This repository is a hands-on learning resource for Site Reliability Engineering (SRE), and your ideas, corrections, or improvements can help others learn more effectively.
 
 ## How to Contribute
 
-1. **Fork the Repository**  
-   Use the GitHub UI to fork the repo into your personal or team space.
+1. **Fork the Repository**
+   Use the GitHub interface to fork this repository into your own space.
 
-2. **Create a Feature Branch**  
-   Name your branch clearly to reflect the proposed change.  
-   Example: `git checkout -b update-exercise5-typos`
-
-3. **Make Your Changes**  
-   Be sure to:
-   - Follow the existing folder structure and naming conventions.
-   - Write clear, concise comments and documentation.
-   - Test your changes where applicable.
-
-4. **Commit and Push**  
+2. **Create a Feature Branch**
+   Use a descriptive name for your branch:
    Example:
-   `git add .`  
-   `git commit -m "Fix typos in Exercise 5 README"`  
-   `git push origin update-exercise5-typos`
 
-5. **Open a Pull Request**  
-   - Include a descriptive title and summary.
-   - Reference any related issue numbers if applicable.
+   ```bash
+   git checkout -b update-exercise5-typos
+   ```
+
+3. **Make Your Changes**
+   Please:
+
+   * Follow the existing folder structure and naming conventions.
+   * Write clear and concise documentation or code comments.
+   * Test your changes (if applicable) to ensure functionality.
+
+4. **Commit and Push**
+   Example:
+
+   ```bash
+   git add .
+   git commit -m "Fix typos in Exercise 5 README"
+   git push origin update-exercise5-typos
+   ```
+
+5. **Open a Pull Request**
+   In your PR:
+
+   * Use a clear title and brief summary of your change.
+   * Reference related issues if applicable.
 
 ## Guidelines
 
-- Write in clear, professional English or Spanish (based on the original content).
-- Avoid emojis or informal tone unless the section is motivational or informal by design.
-- Keep exercises reproducible and self-contained.
-- Add cleanup steps if your exercise deploys persistent resources.
+* Write in clear, professional English or Spanish (based on the original content).
+* Avoid using emojis unless the context is intentionally casual or motivational.
+* Ensure exercises are reproducible and do not rely on external state.
+* Add a `Cleanup` section if your exercise deploys persistent resources (e.g., VMs, pods, volumes).
 
 ## Reviews
 
-Pull requests will be reviewed by instructors or maintainers. Suggestions may be made before merging to ensure consistency across the training experience.
+Pull requests will be reviewed to ensure consistency, accuracy, and clarity. Suggestions may be provided before merging.
 
 ---
 
-Thanks again for your contribution and for helping others learn Site Reliability Engineering in a practical way!
+Thanks again for helping make this SRE training resource better for everyone!

@@ -2,42 +2,42 @@
 
 ## Overview
 
-This guide will help you install the required tools to complete all exercises in the SRE Academy (Exercises 1–19).
-The setup is different depending on your operating system.
+This guide will help you install the tools required to complete all exercises in the SRE Academy (Exercises 1–19).
+Setup instructions vary slightly based on your operating system.
 
 ---
 
-## What You Will Install
+## Tools You’ll Install
 
-| Tool                        | Purpose                                   |
-| --------------------------- | ----------------------------------------- |
-| Python 3                    | Used to run the initial Flask application |
-| pip / venv                  | To manage Python packages                 |
-| Docker (via Colima or WSL2) | To build and run containers               |
-| Minikube                    | To run a local Kubernetes cluster         |
-| kubectl                     | To manage Kubernetes resources            |
-| Homebrew (macOS)            | To install CLI tools                      |
-| pipx + Ansible              | For Infrastructure as Code (Exercise 4.1) |
+| Tool                        | Purpose                                  |
+| --------------------------- | ---------------------------------------- |
+| Python 3                    | Run the initial Flask application        |
+| pip / venv                  | Manage Python packages                   |
+| Docker (via Colima or WSL2) | Build and run containers                 |
+| Minikube                    | Run a local Kubernetes cluster           |
+| kubectl                     | Interact with Kubernetes                 |
+| Homebrew (macOS)            | Install CLI tools                        |
+| pipx + Ansible              | Infrastructure as Code (starting in 4.1) |
 
 ---
 
-## For macOS Users
+## macOS Setup
 
-All macOS users (especially IBM-managed devices) must use **Colima** instead of Docker Desktop.
+> **Note:** On IBM-managed macOS systems, use **Colima** instead of Docker Desktop due to licensing restrictions.
 
-### Step 1: Install Homebrew
+### 1. Install Homebrew
 
 ```bash
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
 
-Verify installation:
+Verify:
 
 ```bash
 brew --version
 ```
 
-### Step 2: Install Required Tools
+### 2. Install Required Tools
 
 ```bash
 brew install python
@@ -49,11 +49,11 @@ brew install kubectl
 
 ---
 
-## For Windows Users
+## Windows Setup (WSL2 + Ubuntu)
 
-You must install **WSL2 (Windows Subsystem for Linux)** and use **Ubuntu** as your Linux distribution.
+You’ll use **WSL2** and install all tools inside Ubuntu.
 
-### Step 1: Enable WSL2
+### 1. Enable WSL2
 
 Open PowerShell **as Administrator** and run:
 
@@ -61,19 +61,17 @@ Open PowerShell **as Administrator** and run:
 wsl --install
 ```
 
-Then restart your computer. This installs:
+Restart your machine when prompted. This installs:
 
 * WSL2
-* Ubuntu (default distribution)
-* Required kernel updates
+* Ubuntu (default)
+* Linux kernel updates
 
-> If needed: [WSL Official Setup Guide](https://learn.microsoft.com/en-us/windows/wsl/install)
+> Optional: [WSL Official Guide](https://learn.microsoft.com/en-us/windows/wsl/install)
 
 ---
 
-### Step 2: Open Ubuntu and Update System
-
-After reboot, open Ubuntu and run:
+### 2. Open Ubuntu and Update
 
 ```bash
 sudo apt update && sudo apt upgrade -y
@@ -81,7 +79,7 @@ sudo apt update && sudo apt upgrade -y
 
 ---
 
-### Step 3: Install Required Tools in Ubuntu
+### 3. Install Tools in Ubuntu
 
 ```bash
 sudo apt install -y python3 python3-pip python3-venv
@@ -92,9 +90,7 @@ sudo apt install -y kubectl
 
 ---
 
-### Step 4: Add Your User to Docker Group
-
-To avoid `sudo` when using Docker:
+### 4. Allow Docker Access Without `sudo`
 
 ```bash
 sudo usermod -aG docker $USER
@@ -103,9 +99,9 @@ newgrp docker
 
 ---
 
-## Install pipx and Ansible
+## Install pipx and Ansible (All Systems)
 
-> Starting from Exercise 4.1, we will use `pipx` to install Ansible in an isolated environment.
+> Required starting in **Exercise 4.1**
 
 ### On macOS
 
@@ -118,7 +114,7 @@ pipx upgrade --include-injected ansible
 pipx inject --include-apps ansible argcomplete
 ```
 
-### On WSL2 (Ubuntu)
+### On Ubuntu (WSL2)
 
 ```bash
 sudo apt update
@@ -130,7 +126,7 @@ pipx upgrade --include-injected ansible
 pipx inject --include-apps ansible argcomplete
 ```
 
-Verify installation:
+Verify:
 
 ```bash
 ansible --version
@@ -138,9 +134,9 @@ ansible --version
 
 ---
 
-## After Installation
+## Post-Installation Checklist
 
-Once all tools are installed, verify:
+Run the following to confirm setup:
 
 ```bash
 python3 --version
@@ -151,15 +147,15 @@ kubectl version --client
 ansible --version
 ```
 
-If any command fails, resolve it **before** attending the first class.
+If any command fails, troubleshoot it **before starting Exercise 1**.
 
 ---
 
 ## Final Notes
 
-* **macOS users** will use `colima` to simulate a Docker environment.
-* **Windows users** will use `WSL2 + Ubuntu + Docker` to follow the same instructions.
-* All commands in this academy assume the **Docker runtime** (`--driver=docker`) for Minikube.
-* You are now ready to begin **Exercise 1**.
+* macOS users: You’ll use **Colima** to simulate Docker.
+* Windows users: You’ll use **WSL2 + Ubuntu** with Docker inside Ubuntu.
+* All exercises assume Minikube uses the **Docker runtime** (`--driver=docker`).
+* Once complete, you're ready to begin [Exercise 1](../exercise1/).
 
 ---

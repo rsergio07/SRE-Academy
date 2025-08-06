@@ -1,37 +1,31 @@
 # License
 
-This repository is intended for **internal training use only** within IBM and IBM contractors participating in the SRE Academy program.
+This repository is provided as an **educational resource** for individuals looking to deepen their knowledge of Site Reliability Engineering (SRE) practices. It includes hands-on labs, technical documentation, and guided exercises that I’ve personally developed and curated.
 
 ## Intellectual Property
 
-All content in this repository—including but not limited to code samples, lab guides, diagrams, and documentation—is the intellectual property of **IBM Corporation**. Unauthorized use, reproduction, or distribution of these materials outside IBM is strictly prohibited.
+Unless otherwise stated, all content in this repository—including code, guides, diagrams, and supporting materials—is the intellectual property of the repository maintainer. You are welcome to use, study, and modify the content for personal learning and non-commercial use.
 
-## Restrictions on Use
+## Usage Terms
 
-- **Internal Use Only:**  
-  The materials are for use by IBM employees and authorized IBM contractors as part of the SRE Academy program.
-- **No External Distribution:**  
-  Content may not be shared, published, or redistributed outside the IBM corporate network without explicit, written permission from the IBM Office of the CIO or designated SRE Academy program leads.
-- **No Modification for External Use:**  
-  You may not modify, adapt, or build upon this content for purposes outside the scope of internal SRE Academy training without prior written authorization.
+* **Personal and Educational Use Permitted**
+  You are encouraged to fork, clone, and adapt this material for your own learning or internal team training purposes.
 
-## Copyright and Trademarks
+* **Attribution Requested (Not Required)**
+  If you share or adapt any significant portion of this repository, please credit the original source: [https://github.com/rsergio07/SRE-Academy](https://github.com/rsergio07/SRE-Academy)
 
-Unless otherwise noted, all trademarks, logos, and brand names are the property of IBM Corporation. Use of these marks without prior consent is strictly prohibited.
+* **No Commercial Redistribution**
+  You may not sell, license, or commercially distribute this content without prior written permission.
 
-## Permission Requests
-
-To request written permission for external use or redistribution, contact:
-
-- IBM Office of the CIO  
-- SRE Academy Program Leads
-
-Include detailed information about the intended use, audience, and any modifications you plan to make.
+* **No Warranty Provided**
+  This content is offered “as-is” without warranty or guarantee of accuracy, completeness, or fitness for any purpose.
 
 ## Disclaimer
 
-This repository and its contents are provided "as is," with no warranties or guarantees, express or implied. IBM disclaims all liability for any damages arising from the use or misuse of these materials.
+This repository was created for educational purposes only. It is not intended to represent any official training program from IBM or any other organization. Any resemblance to proprietary materials is unintentional and all content was independently developed.
 
 ---
 
-© IBM Corporation. All rights reserved.
+© 2025 Sergio Romero. All rights reserved.
+
+Let me know if you'd like this saved as `LICENSE.md` or committed directly.
